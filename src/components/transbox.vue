@@ -14,7 +14,7 @@
             <input type="radio" id="sfo" value="SFO" v-model="platform"><br><br>
             Receiver Address:<br>
             <input v-model="receiver" type="text" name="receiver"><br>
-            Transfer Amount(Finney):<br name="platform">
+            Transfer Amount:<br name="platform">
             <input v-model="amount" type="number" name="amount"><br>
             Memo:<br>
             <input v-model="memo" type="text" name="memo"><br>
@@ -26,7 +26,7 @@
         <p>Current Address: {{ address }}, Balance: {{ balance }}</p>
         <button v-on:click="viewAccount">Account</button><br>
         <p>Transfer Hash: {{ hash }}</p>
-        <button v-on:click="doTransfer">Transfer</button>
+        <button v-on:click="doTransferCb">Transfer</button>
 
     </div>
 </template>
@@ -69,13 +69,26 @@ export default {
         async viewAccount() {
             const info = await API.getAccount();
             this.address = info.address;
-            this.balance = info.balance.slice(0, -18) + '.' + info.balance.slice(-18, -15) + ' ETH';
+            this.balance = info.balance.length > 19 ? info.balance.slice(0, -18) :
+                '0' + '.' + info.balance.slice(-18, -15) + ' ETH';
         },
         async doTransfer() {
+            const actualAmount = (this.amount * 1000).toString().split('.');
             this.hash = await API.sendTransaction(
                 this.address, 
                 this.receiver, 
-                this.amount + '000000000000000',
+                actualAmount[0] + '000000000000000',
+            );
+        },
+        doTransferCb() {
+            const actualAmount = (this.amount * 1000).toString().split('.');
+            API.sendTransaction(
+                this.address, 
+                this.receiver, 
+                actualAmount[0] + '000000000000000',
+                function (transactionHash) {
+                    this.hash = transactionHash;
+                }
             );
         }
     }

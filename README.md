@@ -1,4 +1,5 @@
-# kumotrans
+# Kumo Transaction Demo Proejct
+**Under Construction**
 
 ## Project setup
 ```

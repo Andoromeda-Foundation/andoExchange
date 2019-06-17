@@ -21,12 +21,12 @@ const API = {
     },
     async getAccount() {
         // let accountinfo = {};
-        // const accounts = window.ethereum.enable();
+        const accounts = await window.ethereum.enable();
         // accountinfo.address = accounts[0];
         // return accountinfo;
         // const accounts = await window.ethereum.enable();
         // return accounts[0];
-        const accounts = await web3.eth.getAccounts();
+        // const accounts = await web3.eth.getAccounts();
         const balance = await web3.eth.getBalance(accounts[0]);
         const info = { address:accounts[0], balance };
         // console.log();
@@ -38,7 +38,20 @@ const API = {
             to: receiver,
             value: amount
         });
-        return result.transactionHash;
+        const hash = result.transactionHash;
+        return hash;
+    },
+    sendTransactionCb(sender, receiver, amount, callback) {
+        web3.eth.sendTransaction({
+            from: sender,
+            to: receiver,
+            value: amount
+        }, function(error, hash) {
+            if (error) {
+                throw(error);
+            }
+            callback(hash);
+        });
     }
 }
 
