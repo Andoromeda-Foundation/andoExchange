@@ -26,13 +26,15 @@
         <p>Current Address: {{ address }}, Balance: {{ balance }}</p>
         <button v-on:click="viewAccount">Account</button><br>
         <p>Transfer Hash: {{ hash }}</p>
-        <button v-on:click="doTransferCb">Transfer</button>
+        <button v-on:click="doTransfer">Transfer</button>
 
     </div>
 </template>
 
 <script>
 import API from '@/api/ethmetamask'
+import EOSAPI from '@/api/eosscatter'
+import { platform } from 'os';
 
 export default {
     name: 'transbox',
@@ -67,18 +69,32 @@ export default {
             this.platformrr = this.platform;
         },
         async viewAccount() {
-            const info = await API.getAccount();
-            this.address = info.address;
-            this.balance = info.balance.length > 19 ? info.balance.slice(0, -18) :
-                '0' + '.' + info.balance.slice(-18, -15) + ' ETH';
+            if (this.platform === 'ETH') {
+                const info = await API.getAccount();
+                this.address = info.address;
+                this.balance = info.balance.length > 19 ? info.balance.slice(0, -18) :
+                    '0' + '.' + info.balance.slice(-18, -15) + ' ETH';
+            } else if (this.platform === 'EOS') {
+                await EOSAPI.connectScatter();
+                this.address = await EOSAPI.getAccount();
+            }
         },
         async doTransfer() {
-            const actualAmount = (this.amount * 1000).toString().split('.');
-            this.hash = await API.sendTransaction(
-                this.address, 
-                this.receiver, 
-                actualAmount[0] + '000000000000000',
-            );
+            if (this.platform === 'ETH') {
+                const actualAmount = (this.amount * 1000).toString().split('.');
+                this.hash = await API.sendTransaction(
+                    this.address, 
+                    this.receiver, 
+                    actualAmount[0] + '000000000000000',
+                );
+            } else if (this.platform === 'EOS') {
+                this.hash = await EOSAPI.sendTransaction(
+                    this.address,
+                    this.receiver,
+                    this.amount + '00 EOS',
+                    'memo'
+                );
+            }
         },
         doTransferCb() {
             const actualAmount = (this.amount * 1000).toString().split('.');
